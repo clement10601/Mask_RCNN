@@ -2,3 +2,12 @@
 __pycache__/
 mask_rcnn_coco.h5
 data/
+images/
+result/
+logs/
+
+*.jpg
+*.png
+
+*.pyc
+*.random
