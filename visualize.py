@@ -150,8 +150,8 @@ def display_instances(image, boxes, masks, class_ids, class_names,
 
 
 def save_instances(fname, image, boxes, masks, class_ids, class_names,
-                      scores=None, title="",
-                      figsize=(16, 16), ax=None, score_throttle='0.95'):
+                      scores=None, title="", score_throttle='0.95',
+                      figsize=(16, 16), ax=None):
     """
     boxes: [num_instance, (y1, x1, y2, x2, class_id)] in image coordinates.
     masks: [height, width, num_instances]
@@ -200,7 +200,6 @@ def save_instances(fname, image, boxes, masks, class_ids, class_names,
 
         # Label
         class_id = class_ids[i]
-        score = scores[i] if scores is not None else None
         label = class_names[class_id]
         x = random.randint(x1, (x1 + x2) // 2)
         caption = "{} {:.3f}".format(label, score) if score else label
@@ -227,6 +226,9 @@ def save_instances(fname, image, boxes, masks, class_ids, class_names,
     if not os.path.exists(directory):
         os.makedirs(directory)
     fig.savefig(directory + '/' + fname )
+    plt.cla()
+    plt.clf()
+    plt.close(fig)
 
 def draw_rois(image, rois, refined_rois, mask, class_ids, class_names, limit=10):
     """
