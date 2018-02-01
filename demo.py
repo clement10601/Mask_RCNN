@@ -68,8 +68,8 @@ model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
 # Load weights trained on MS-COCO
 model.load_weights(COCO_MODEL_PATH, by_name=True)
 
-#file_names = next(os.walk(IMAGE_DIR))[2]
-file_names = ['gggggg.jpg']
+file_names = next(os.walk(IMAGE_DIR))[2]
+#file_names = ['gggggg.jpg']
 start_t = timeit.default_timer()
 sum_dect = 0.0
 for idx, name in enumerate(file_names):
