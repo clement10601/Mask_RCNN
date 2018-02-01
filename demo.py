@@ -88,7 +88,7 @@ for idx, name in enumerate(file_names):
     r = results[0]
     f = os.path.basename(f_name)
     visualize.save_instances(f, image, r['rois'], r['masks'], r['class_ids'],
-                            class_names, r['scores'])
+                            class_names, r['scores'], score_throttle='0.95')
 stop_t = timeit.default_timer()
 print("Avg. Dect Time: {}".format(sum_dect / len(file_names)))
 print("Exec Time: {}".format(stop_t - start_t))
