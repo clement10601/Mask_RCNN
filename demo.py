@@ -68,8 +68,8 @@ model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
 # Load weights trained on MS-COCO
 model.load_weights(COCO_MODEL_PATH, by_name=True)
 
-#file_names = next(os.walk(IMAGE_DIR))[2]
-file_names = ['gggggg.jpg']
+file_names = next(os.walk(IMAGE_DIR))[2]
+#file_names = ['gggggg.jpg']
 start_t = timeit.default_timer()
 sum_dect = 0.0
 for idx, name in enumerate(file_names):
@@ -88,7 +88,7 @@ for idx, name in enumerate(file_names):
     r = results[0]
     f = os.path.basename(f_name)
     visualize.save_instances(f, image, r['rois'], r['masks'], r['class_ids'],
-                            class_names, r['scores'])
+                            class_names, r['scores'], score_throttle='0.95')
 stop_t = timeit.default_timer()
 print("Avg. Dect Time: {}".format(sum_dect / len(file_names)))
 print("Exec Time: {}".format(stop_t - start_t))
