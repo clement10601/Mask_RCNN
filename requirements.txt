@@ -43,7 +43,6 @@ Pillow==5.0.0
 prompt-toolkit==1.0.15
 protobuf==3.5.1
 ptyprocess==0.5.2
-pycocotools==2.0
 Pygments==2.2.0
 pyparsing==2.2.0
 python-crontab==2.2.8
