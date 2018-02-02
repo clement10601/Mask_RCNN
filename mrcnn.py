@@ -3,15 +3,12 @@ import sys
 import argparse
 import warnings
 warnings.filterwarnings("ignore")
-import matplotlib
-matplotlib.use('Agg')
 import skimage.io
-import matplotlib.pyplot as plt
 
 from tools import utils
 from tools.config import Config
 from maskrcnn import model as modellib
-from maskrcnn import visualize
+from maskrcnn import stdinstance
 
 parser = argparse.ArgumentParser()
 parser.add_argument("path", help="input path")
@@ -81,7 +78,7 @@ results = model.detect([image], verbose=0)
 r = results[0]
 
 labels = []
-labels = visualize.extract_instances(r['rois'], r['masks'], r['class_ids'],
+labels = stdinstance.extract_instances(r['rois'], r['masks'], r['class_ids'],
                         class_names, r['scores'], score_throttle='0.9')
 stdout = "{{\"code\":200, \"msg\":\"Upload success.\",\"imgurl\":\"{}\",\"result\":\"{}\"}}"
 print(stdout.format(filename, labels))
