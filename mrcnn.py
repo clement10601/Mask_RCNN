@@ -1,20 +1,12 @@
-import timeit
 import os
 import sys
-from io import StringIO
 import argparse
 import warnings
 warnings.filterwarnings("ignore")
-import random
-import math
-import numpy as np
-import matplotlib
-matplotlib.use('Agg')
 import skimage.io
-import matplotlib.pyplot as plt
 
-import coco
 from tools import utils
+from tools.config import Config
 from maskrcnn import model as modellib
 from maskrcnn import visualize
 
@@ -44,11 +36,13 @@ if not os.path.exists(COCO_MODEL_PATH):
     utils.download_trained_weights(COCO_MODEL_PATH)
 # Directory of images to run detection on
 
-class InferenceConfig(coco.CocoConfig):
+class InferenceConfig(Config):
     # Set batch size to 1 since we'll be running inference on
     # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
-    GPU_COUNT = 1
+    NAME = "coco"
+    GPU_COUNT = 0
     IMAGES_PER_GPU = 1
+    NUM_CLASSES = 1 + 80
 config = InferenceConfig()
 
 class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
