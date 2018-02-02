@@ -3,6 +3,7 @@ import sys
 import argparse
 import warnings
 warnings.filterwarnings("ignore")
+os.environ.setdefault('PATH', '')
 import skimage.io
 
 from tools import utils
