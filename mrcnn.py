@@ -39,7 +39,7 @@ if not os.path.exists(COCO_MODEL_DIR):
 COCO_MODEL_PATH = os.path.join(ROOT_DIR, "weights/mask_rcnn_coco.h5")
 # Download COCO trained weights from Releases if needed
 if not os.path.exists(COCO_MODEL_PATH):
-    utils.download_trained_weights(COCO_MODEL_PATH)
+    utils.download_trained_weights(COCO_MODEL_PATH, verbose=0)
 # Directory of images to run detection on
 
 class InferenceConfig(Config):
