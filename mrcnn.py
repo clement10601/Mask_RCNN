@@ -1,6 +1,10 @@
 import timeit
 import os
 import sys
+from io import StringIO
+import argparse
+import warnings
+warnings.filterwarnings("ignore")
 import random
 import math
 import numpy as np
@@ -14,6 +18,18 @@ from tools import utils
 from maskrcnn import model as modellib
 from maskrcnn import visualize
 
+parser = argparse.ArgumentParser()
+parser.add_argument("path", help="input path")
+args = parser.parse_args()
+if args.path:
+  try:
+    INPUT_PATH = os.path.abspath(args.path)
+  except Exception as e:
+    print(e)
+    sys.exit(1)
+else:
+  raise Exception('No input file!')
+  sys.exit(1)
 ###
 ### Para Setup
 ###
@@ -27,22 +43,14 @@ COCO_MODEL_PATH = os.path.join(ROOT_DIR, "weights/mask_rcnn_coco.h5")
 if not os.path.exists(COCO_MODEL_PATH):
     utils.download_trained_weights(COCO_MODEL_PATH)
 # Directory of images to run detection on
-IMAGE_DIR = os.path.join(ROOT_DIR, "images")
+
 class InferenceConfig(coco.CocoConfig):
     # Set batch size to 1 since we'll be running inference on
     # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
     GPU_COUNT = 1
     IMAGES_PER_GPU = 1
 config = InferenceConfig()
-#config.display()
 
-## Load COCO dataset
-#dataset = coco.CocoDataset()
-#dataset.load_coco("data", "train")
-#dataset.prepare()
-
-# Print class names
-#class_names = dataset.class_names
 class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
                'bus', 'train', 'truck', 'boat', 'traffic light',
                'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird',
@@ -61,31 +69,20 @@ class_names = ['BG', 'person', 'bicycle', 'car', 'motorcycle', 'airplane',
 
 # Create model object in inference mode.
 model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
-
 # Load weights trained on MS-COCO
 model.load_weights(COCO_MODEL_PATH, by_name=True)
 
-file_names = next(os.walk(IMAGE_DIR))[2]
-#file_names = ['gggggg.jpg']
-start_t = timeit.default_timer()
-sum_dect = 0.0
-for idx, name in enumerate(file_names):
-    f_name = os.path.join(IMAGE_DIR, name)
-    image = skimage.io.imread(f_name)
+path, filename = os.path.split(INPUT_PATH)
+image = skimage.io.imread(INPUT_PATH)
+# Run detectionV
+results = model.detect([image], verbose=0)
 
-    # Run detectionV
-    local_t_str = timeit.default_timer()
-    results = model.detect([image], verbose=1)
-    local_t_end = timeit.default_timer()
-    d_time = local_t_end - local_t_str
-    sum_dect += d_time
-    print("Dect Time: {}".format(d_time))
+# Visualize results
+r = results[0]
 
-    # Visualize results
-    r = results[0]
-    f = os.path.basename(f_name)
-    visualize.save_instances(f, image, r['rois'], r['masks'], r['class_ids'],
-                            class_names, r['scores'], score_throttle='0.95')
-stop_t = timeit.default_timer()
-print("Avg. Dect Time: {}".format(sum_dect / len(file_names)))
-print("Exec Time: {}".format(stop_t - start_t))
+labels = []
+labels = visualize.extract_instances(r['rois'], r['masks'], r['class_ids'],
+                        class_names, r['scores'], score_throttle='0.9')
+stdout = "{{\"code\":200, \"msg\":\"Upload success.\",\"imgurl\":\"{}\",\"result\":\"{}\"}}"
+print(stdout.format(filename, labels))
+

@@ -21,7 +21,7 @@ import matplotlib.lines as lines
 from matplotlib.patches import Polygon
 import IPython.display
 
-import utils
+from . import utils
 
 
 ############################################################
@@ -222,13 +222,41 @@ def save_instances(fname, image, boxes, masks, class_ids, class_names,
             p = Polygon(verts, facecolor="none", edgecolor=color)
             ax.add_patch(p)
     ax.imshow(masked_image.astype(np.uint8))
-    directory = 'result'
+    directory = output_dir
     if not os.path.exists(directory):
         os.makedirs(directory)
     fig.savefig(directory + '/' + fname )
     plt.cla()
     plt.clf()
     plt.close(fig)
+
+def extract_instances(boxes, masks, class_ids, class_names,
+                      scores=None, title="", score_throttle='0.95'):
+    """
+    boxes: [num_instance, (y1, x1, y2, x2, class_id)] in image coordinates.
+    masks: [height, width, num_instances]
+    class_ids: [num_instances]
+    class_names: list of class names of the dataset
+    scores: (optional) confidence scores for each box
+    """
+    # Number of instances
+    N = boxes.shape[0]
+    if not N:
+        print("\n*** No instances to display *** \n")
+    else:
+        assert boxes.shape[0] == masks.shape[-1] == class_ids.shape[0]
+    output = []
+    for i in range(N):
+        score = scores[i] if scores is not None else None
+        if float(score) < float(score_throttle):
+            continue
+        # Label
+        class_id = class_ids[i]
+        label = class_names[class_id]
+        output.append(label)
+    return output
+
+
 
 def draw_rois(image, rois, refined_rois, mask, class_ids, class_names, limit=10):
     """

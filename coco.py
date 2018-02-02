@@ -45,15 +45,15 @@ import zipfile
 import urllib.request
 import shutil
 
-from config import Config
-import utils
-import model as modellib
+from tools.config import Config
+from tools import utils
+import maskrcnn.model as modellib
 
 # Root directory of the project
 ROOT_DIR = os.getcwd()
 
 # Path to trained weights file
-COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
+COCO_MODEL_PATH = os.path.join(ROOT_DIR, "weights/mask_rcnn_coco.h5")
 
 # Directory to save logs and model checkpoints, if not provided
 # through the command line argument --logs
