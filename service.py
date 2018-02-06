@@ -13,6 +13,9 @@ import warnings
 warnings.filterwarnings("ignore")
 os.environ.setdefault('PATH', '')
 import skimage.io
+import keras
+import tensorflow as tf
+import threading
 
 from .tools import utils
 from .tools.config import Config
@@ -29,6 +32,8 @@ class MLService(object):
             self.app = None
         # Root directory of the project
         self.ROOT_DIR = app.config['ROOT_DIR']
+        # imgfiles
+        self.UPLOAD_FOLDER = app.config['UPLOAD_FOLDER']
         # Directory to save logs and trained model
         self.MODEL_DIR = app.config['MODEL_DIR']
         # Local path to trained weights file
@@ -50,27 +55,45 @@ class MLService(object):
                             'keyboard', 'cell phone', 'microwave', 'oven', 'toaster',
                             'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors',
                             'teddy bear', 'hair drier', 'toothbrush']
+        keras.backend.clear_session() 
         # Create model object in inference mode.
-        self.model = modellib.MaskRCNN(mode="inference", model_dir=self.MODEL_DIR, config=self.config)
+        self._model = modellib.MaskRCNN(mode="inference", model_dir=self.MODEL_DIR, config=self.config)
         # Load weights trained on MS-COCO
-        self.model.load_weights(self.COCO_MODEL_PATH, by_name=True)
+        self._model.load_weights(self.COCO_MODEL_PATH, by_name=True)
+        self.graph = tf.get_default_graph()
 
 
     def init_app(self, app):
         self.app = app
 
-    def detect(self, IMG_PATH, throttle='0.9'):
-      INPUT_PATH = os.path.abspath(IMG_PATH)
-      path, filename = os.path.split(INPUT_PATH)
-      image = skimage.io.imread(INPUT_PATH)
-      # Run detectionV
-      results = self.model.detect([image], verbose=0)
-      # Visualize results
-      r = results[0]
-      labels = []
-      labels = stdinstance.extract_instances(r['rois'], r['masks'], r['class_ids'],
-                                             self.class_names, r['scores'], score_throttle=throttle)
-      return {"imgurl": filename, "result": labels}
+
+    def detect(self, INPUT_PATH, throttle='0.9'):
+        IMG_PATH = os.path.abspath(INPUT_PATH)
+        path, filename = os.path.split(IMG_PATH)
+        image = skimage.io.imread(IMG_PATH)
+        with self.graph.as_default():
+            # Run detection
+            results = self._model.detect([image], verbose=0)
+            # Visualize results
+            r = results[0]
+            labels = []
+            labels = stdinstance.extract_instances(r['rois'], r['masks'], r['class_ids'],
+                                                  self.class_names, r['scores'], score_throttle=throttle)
+            return {"imgurl": filename, "result": labels}
+
+    def detect_path(self, IMG_PATH, throttle='0.9'):
+        INPUT_PATH = os.path.abspath(IMG_PATH)
+        path, filename = os.path.split(INPUT_PATH)
+        image = skimage.io.imread(INPUT_PATH)
+        with self.graph.as_default():
+            # Run detection
+            results = self._model.detect([image], verbose=0)
+            # Visualize results
+            r = results[0]
+            labels = []
+            labels = stdinstance.extract_instances(r['rois'], r['masks'], r['class_ids'],
+                                                  self.class_names, r['scores'], score_throttle=throttle)
+            return {"imgurl": filename, "result": labels}
 
 
 class InferenceConfig(Config):
