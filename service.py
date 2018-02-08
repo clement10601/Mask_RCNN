@@ -15,7 +15,6 @@ os.environ.setdefault('PATH', '')
 import skimage.io
 import keras
 import tensorflow as tf
-import threading
 
 from .tools import utils
 from .tools.config import Config
@@ -71,20 +70,6 @@ class MLService(object):
         IMG_PATH = os.path.abspath(INPUT_PATH)
         path, filename = os.path.split(IMG_PATH)
         image = skimage.io.imread(IMG_PATH)
-        with self.graph.as_default():
-            # Run detection
-            results = self._model.detect([image], verbose=0)
-            # Visualize results
-            r = results[0]
-            labels = []
-            labels = stdinstance.extract_instances(r['rois'], r['masks'], r['class_ids'],
-                                                  self.class_names, r['scores'], score_throttle=throttle)
-            return {"imgurl": filename, "result": labels}
-
-    def detect_path(self, IMG_PATH, throttle='0.9'):
-        INPUT_PATH = os.path.abspath(IMG_PATH)
-        path, filename = os.path.split(INPUT_PATH)
-        image = skimage.io.imread(INPUT_PATH)
         with self.graph.as_default():
             # Run detection
             results = self._model.detect([image], verbose=0)
