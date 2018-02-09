@@ -57,7 +57,7 @@ class MLService(object):
                             'teddy bear', 'hair drier', 'toothbrush']
         keras.backend.clear_session()
         config = tf.ConfigProto()
-        config.gpu_options.per_process_gpu_memory_fraction = 0.3
+        config.gpu_options.per_process_gpu_memory_fraction = 0.1
         set_session(tf.Session(config=config))
         # Create model object in inference mode.
         self._model = modellib.MaskRCNN(mode="inference", model_dir=self.MODEL_DIR, config=self.config)
