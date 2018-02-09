@@ -14,6 +14,7 @@ warnings.filterwarnings("ignore")
 os.environ.setdefault('PATH', '')
 import skimage.io
 import keras
+from keras.backend.tensorflow_backend import set_session
 import tensorflow as tf
 
 from .tools import utils
@@ -54,7 +55,10 @@ class MLService(object):
                             'keyboard', 'cell phone', 'microwave', 'oven', 'toaster',
                             'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors',
                             'teddy bear', 'hair drier', 'toothbrush']
-        keras.backend.clear_session() 
+        keras.backend.clear_session()
+        config = tf.ConfigProto()
+        config.gpu_options.per_process_gpu_memory_fraction = 0.3
+        set_session(tf.Session(config=config))
         # Create model object in inference mode.
         self._model = modellib.MaskRCNN(mode="inference", model_dir=self.MODEL_DIR, config=self.config)
         # Load weights trained on MS-COCO
