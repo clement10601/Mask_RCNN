@@ -151,7 +151,7 @@ def display_instances(image, boxes, masks, class_ids, class_names,
 
 def save_instances(fname, image, boxes, masks, class_ids, class_names,
                       scores=None, title="", score_throttle='0.95',
-                      figsize=(16, 16), ax=None):
+                      figsize=(16, 16), ax=None, output_dir='../output_dir'):
     """
     boxes: [num_instance, (y1, x1, y2, x2, class_id)] in image coordinates.
     masks: [height, width, num_instances]
