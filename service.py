@@ -56,9 +56,9 @@ class MLService(object):
                             'sink', 'refrigerator', 'book', 'clock', 'vase', 'scissors',
                             'teddy bear', 'hair drier', 'toothbrush']
         keras.backend.clear_session()
-        config = tf.ConfigProto()
-        config.gpu_options.per_process_gpu_memory_fraction = 0.1
-        set_session(tf.Session(config=config))
+        conf = tf.ConfigProto()
+        conf.gpu_options.per_process_gpu_memory_fraction = app.config['MEM_FRAC']
+        set_session(tf.Session(config=conf))
         # Create model object in inference mode.
         self._model = modellib.MaskRCNN(mode="inference", model_dir=self.MODEL_DIR, config=self.config)
         # Load weights trained on MS-COCO
