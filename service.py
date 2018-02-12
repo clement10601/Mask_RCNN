@@ -69,7 +69,6 @@ class MLService(object):
     def init_app(self, app):
         self.app = app
 
-
     def detect(self, INPUT_PATH, throttle='0.9'):
         IMG_PATH = os.path.abspath(INPUT_PATH)
         path, filename = os.path.split(IMG_PATH)
