@@ -91,4 +91,3 @@ class InferenceConfig(Config):
     GPU_COUNT = 1
     IMAGES_PER_GPU = 1
     NUM_CLASSES = 1 + 80
-

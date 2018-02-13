@@ -32,5 +32,6 @@ def extract_instances(boxes, masks, class_ids, class_names,
         # Label
         class_id = class_ids[i]
         label = class_names[class_id]
+        out = {label}
         output.append(label)
     return output
