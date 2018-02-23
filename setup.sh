@@ -6,10 +6,11 @@
 git config --global http.sslverify false
 
 apt-get install -y python-setuptools
+
 # setup a virtual environment
 virtualenv -p python3 mask_rcnn_virtualenv
 
-source mask_mask_rcnn_virtualenv/bin/activate
+source mask_rcnn_virtualenv/bin/activate
 
 # install requirement package
 pip install -r requirements.txt
