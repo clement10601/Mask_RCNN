@@ -2,6 +2,10 @@
 
 # note you must use git clone --recursive to clone source code from https://192.168.11.111/ObjectDetection/Mask_RCNN.git
 
+# set sslverify to false
+git config --global http.sslverify false
+
+apt-get install -y python-setuptools
 # setup a virtual environment
 virtualenv -p python3 mask_rcnn_virtualenv
 
