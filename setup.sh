@@ -8,6 +8,7 @@ git config --global http.sslverify false
 apt-get install -y python-setuptools
 apt install -y python-pip
 apt-get install -y python3-dev
+apt-get install python3-tk
 
 # setup a virtual environment
 virtualenv -p python3 mask_rcnn_virtualenv
