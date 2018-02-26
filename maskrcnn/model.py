@@ -28,7 +28,7 @@ import keras.initializers as KI
 import keras.engine as KE
 import keras.models as KM
 
-from . import utils
+from maskrcnn import utils
 
 # Requires TensorFlow 1.3+ and Keras 2.0.8+.
 from distutils.version import LooseVersion

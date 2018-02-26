@@ -21,7 +21,7 @@ import matplotlib.lines as lines
 from matplotlib.patches import Polygon
 import IPython.display
 
-from . import utils
+from maskrcnn import utils
 
 
 ############################################################
