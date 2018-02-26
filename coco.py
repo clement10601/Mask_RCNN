@@ -63,7 +63,7 @@ COCO_MODEL_PATH = os.path.join(ROOT_DIR, "weights/mask_rcnn_coco.h5")
 # Directory to save logs and model checkpoints, if not provided
 # through the command line argument --logs
 DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
-DEFAULT_DATASET_YEAR = "2014"
+DEFAULT_DATASET_YEAR = "2017"
 
 ############################################################
 #  Configurations
@@ -106,10 +106,8 @@ class CocoDataset(utils.Dataset):
         return_coco: If True, returns the COCO object.
         auto_download: Automatically download and unzip MS-COCO images and annotations
         """
-
         if auto_download is True:
             self.auto_download(dataset_dir, subset, year)
-
         coco = COCO("{}/annotations/instances_{}{}.json".format(dataset_dir, subset, year))
         if subset == "minival" or subset == "valminusminival":
             subset = "val"
