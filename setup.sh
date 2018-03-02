@@ -9,6 +9,7 @@ apt-get install -y python-setuptools
 apt install -y python-pip
 apt-get install -y python3-dev
 apt-get install -y python3-tk
+apt install -y python3-pip
 
 # setup a virtual environment
 virtualenv -p python3 mask_rcnn_virtualenv
