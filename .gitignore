@@ -5,6 +5,7 @@ data/
 images/
 result/
 logs/
+maskrcnn/
 
 *.jpg
 *.png
