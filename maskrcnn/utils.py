@@ -715,11 +715,10 @@ def compute_ap(gt_boxes, gt_class_ids,
     match_count = 0
     pred_match = np.zeros([pred_boxes.shape[0]])
     gt_match = np.zeros([gt_boxes.shape[0]])
-    
+
     for i in range(len(pred_boxes)):
         # Find best matching ground truth box
         sorted_ixs = np.argsort(overlaps[i])[::-1]
-        match_flag = False
         for j in sorted_ixs:
             # If ground truth box is already matched, go to next one
             if gt_match[j] == 1:
@@ -733,27 +732,7 @@ def compute_ap(gt_boxes, gt_class_ids,
                 match_count += 1
                 gt_match[j] = 1
                 pred_match[i] = 1
-                TP_list[pred_class_ids[i]] += 1
-                match_flag = True
                 break
-        
-        # match flag = False, FP count + 1
-        if match_flag != True:
-            FP_list[map_source_class_id[i]] += 1
-    
-    # Calculate FN
-    tmp_pred_class_ids = np.copy(pred_class_ids)
-
-    if len(gt_class_ids) > len(pred_class_ids):
-        for i in gt_class_ids:
-            if i in pred_class_ids:
-                tmp_pred_class_ids.remove(i)
-                continue
-            else:
-                FN_list[i] += 1
-    
-    return TP_list, FP_list, FN_list
-    ###############
 
     # Compute precision and recall at each prediction box step
     precisions = np.cumsum(pred_match) / (np.arange(len(pred_match)) + 1)
@@ -775,7 +754,6 @@ def compute_ap(gt_boxes, gt_class_ids,
                  precisions[indices])
 
     return mAP, precisions, recalls, overlaps
-
 
 
 
