@@ -76,10 +76,14 @@ def apply_mask(image, mask, color, alpha=0.5):
     return image
 
 
-def apply_bbox(image, bbox, color, alpha=0.5):
+def apply_bbox(image, bbox, label, color, alpha=0.5):
     """Apply the given bbox to the image.
     """
-    img = cv2.rectangle(image, (bbox[0],bbox[1]), (bbox[2],bbox[3]), color, 2)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    img = image.astype(np.uint8)
+    img = cv2.rectangle(img, (bbox[0],bbox[1]), (bbox[2],bbox[3]), color, 2)
+    img = cv2.putText(img, label, (bbox[0],bbox[1]),
+        font, 0.8, color, 2, cv2.LINE_AA)
     return img
 
 def display_instances(image, boxes, masks, class_ids, class_names,
@@ -269,13 +273,12 @@ def return_instances(image, boxes, masks, class_ids, class_names,
             # Skip this instance. Has no bbox. Likely lost in image cropping.
             continue
         y1, x1, y2, x2 = boxes[i]
-        masked_image = apply_bbox(masked_image.astype(np.uint8), (x1,y1,x2,y2), color)
-
         # Label
         class_id = class_ids[i]
         label = class_names[class_id]
-        x = random.randint(x1, (x1 + x2) // 2)
         caption = "{} {:.3f}".format(label, score) if score else label
+
+        masked_image = apply_bbox(masked_image, (x1,y1,x2,y2), caption, color)
 
         # Mask
         mask = masks[:, :, i]
