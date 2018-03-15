@@ -242,7 +242,7 @@ def save_instances(fname, image, boxes, masks, class_ids, class_names,
 
 def return_instances(image, boxes, masks, class_ids, class_names,
                       scores=None, title="", score_throttle='0.95',
-                      figsize=(16, 16), ax=None, output_dir='./output_dir'):
+                      colors=None):
     """
     boxes: [num_instance, (y1, x1, y2, x2, class_id)] in image coordinates.
     masks: [height, width, num_instances]
@@ -258,9 +258,9 @@ def return_instances(image, boxes, masks, class_ids, class_names,
     else:
         assert boxes.shape[0] == masks.shape[-1] == class_ids.shape[0]
     # Generate random colors
-    colors = random_colors(N)
+    if colors is None:
+        colors = random_colors(N)
     # Show area outside image boundaries.
-    height, width = image.shape[:2]
 
     masked_image = image.astype(np.uint32).copy()
     for i in range(N):

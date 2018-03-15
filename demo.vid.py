@@ -14,6 +14,8 @@ import coco
 from tools import utils
 from maskrcnn import model as modellib
 from maskrcnn import visualize
+import colorsys
+import random
 
 ###
 ### Para Setup
@@ -44,6 +46,17 @@ class InferenceConfig(coco.CocoConfig):
 config = InferenceConfig()
 #config.display()
 
+def random_colors(N, bright=True):
+    """
+    Generate random colors.
+    To get visually distinct colors, generate them in HSV space then
+    convert to RGB.
+    """
+    brightness = 1.0 if bright else 0.7
+    hsv = [(i / N, 1, brightness) for i in range(N)]
+    colors = list(map(lambda c: colorsys.hsv_to_rgb(*c), hsv))
+    random.shuffle(colors)
+    return colors
 ## Load COCO dataset
 #dataset = coco.CocoDataset()
 #dataset.load_coco("data", "train")
@@ -78,26 +91,25 @@ file_name = vid_file
 start_t = timeit.default_timer()
 
 video_reader = cv2.VideoCapture(file_name)
+fps = video_reader.get(cv2.cv.CV_CAP_PROP_FPS)
 nb_frames = int(video_reader.get(cv2.CAP_PROP_FRAME_COUNT))
 frame_h = int(video_reader.get(cv2.CAP_PROP_FRAME_HEIGHT))
 frame_w = int(video_reader.get(cv2.CAP_PROP_FRAME_WIDTH))
 
 video_writer = cv2.VideoWriter(vid_out,
                                cv2.VideoWriter_fourcc(*'XVID'), 
-                               50.0, 
+                               fps, 
                                (frame_w, frame_h))
-
+print("Processing {0} frames, FPS: {1}".format(nb_frames, fps))
+colors = random_colors(100)
 for i in tqdm(range(nb_frames)):
     ret, image = video_reader.read()
-    results = model.detect([image], verbose=1)
+    results = model.detect([image], verbose=0)
     r = results[0]
     image = visualize.return_instances(image, r['rois'], r['masks'], r['class_ids'],
-                            class_names, r['scores'], score_throttle='0.95')
+                            class_names, r['scores'], score_throttle='0.95', colors=colors)
     video_writer.write(np.uint8(image))
-    
 video_reader.release()
 video_writer.release()
-stop_t = timeit.default_timer()
-print("Exec Time: {}".format(stop_t - start_t))
 stop_t = timeit.default_timer()
 print("Exec Time: {}".format(stop_t - start_t))
