@@ -269,7 +269,7 @@ def return_instances(image, boxes, masks, class_ids, class_names,
             # Skip this instance. Has no bbox. Likely lost in image cropping.
             continue
         y1, x1, y2, x2 = boxes[i]
-        masked_image = apply_bbox(masked_image, (x1,y1,x2,y2), color)
+        masked_image = apply_bbox(masked_image.astype(np.uint8), (x1,y1,x2,y2), color)
 
         # Label
         class_id = class_ids[i]
