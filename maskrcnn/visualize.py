@@ -76,14 +76,15 @@ def apply_mask(image, mask, color, alpha=0.5):
     return image
 
 
-def apply_bbox(image, bbox, label, color, alpha=0.5):
+def apply_bbox(image, bbox, label, color, alpha=0.7):
     """Apply the given bbox to the image.
     """
     font = cv2.FONT_HERSHEY_SIMPLEX
     img = image.astype(np.uint8)
-    img = cv2.rectangle(img, (bbox[0],bbox[1]), (bbox[2],bbox[3]), color, 2)
+    img = cv2.rectangle(img, (bbox[0],bbox[1]), (bbox[2],bbox[3]),
+                        img[:, :, c] *(1 - alpha) + alpha * color[c] * 255, 2)
     img = cv2.putText(img, label, (bbox[0],bbox[1]),
-        font, 0.8, color, 2, cv2.LINE_AA)
+        font, 0.8, img[:, :, c] *(1 - alpha) + alpha * color[c] * 255, 2, cv2.LINE_AA)
     return img
 
 def display_instances(image, boxes, masks, class_ids, class_names,

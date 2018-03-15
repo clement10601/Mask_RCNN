@@ -91,13 +91,13 @@ file_name = vid_file
 start_t = timeit.default_timer()
 
 video_reader = cv2.VideoCapture(file_name)
-fps = video_reader.get(cv2.cv.CV_CAP_PROP_FPS)
+fps = video_reader.get(cv2.CAP_PROP_FPS)
 nb_frames = int(video_reader.get(cv2.CAP_PROP_FRAME_COUNT))
 frame_h = int(video_reader.get(cv2.CAP_PROP_FRAME_HEIGHT))
 frame_w = int(video_reader.get(cv2.CAP_PROP_FRAME_WIDTH))
 
 video_writer = cv2.VideoWriter(vid_out,
-                               cv2.VideoWriter_fourcc(*'XVID'), 
+                               cv2.VideoWriter_fourcc(*'MP4V'), 
                                fps, 
                                (frame_w, frame_h))
 print("Processing {0} frames, FPS: {1}".format(nb_frames, fps))
