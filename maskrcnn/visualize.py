@@ -79,8 +79,8 @@ def apply_mask(image, mask, color, alpha=0.5):
 def apply_bbox(image, bbox, color, alpha=0.5):
     """Apply the given bbox to the image.
     """
-    img = cv2.rectangle(image, (bbox[0],bbox[1]), (bbox[2],bboxp[3]), color, 2)
-    return 
+    img = cv2.rectangle(image, (bbox[0],bbox[1]), (bbox[2],bbox[3]), color, 2)
+    return img
 
 def display_instances(image, boxes, masks, class_ids, class_names,
                       scores=None, title="",
