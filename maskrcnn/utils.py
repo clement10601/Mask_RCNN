@@ -565,6 +565,128 @@ def trim_zeros(x):
     return x[~np.all(x == 0, axis=1)]
 
 
+def compute_class_PR(gt_boxes, gt_class_ids,
+               pred_boxes, pred_class_ids, pred_scores,
+               class_num, iou_threshold=0.5):
+    """Compute Precision and Recall of each class, threshold (default 0.5).
+
+    Returns:
+    mAP: Mean Average Precision
+    precisions: List of precisions at different class score thresholds.
+    recalls: List of recall values at different class score thresholds.
+    overlaps: [pred_boxes, gt_boxes] IoU overlaps.
+    """
+
+    pred_boxes = trim_zeros(pred_boxes)
+    pred_scores = pred_scores[:pred_boxes.shape[0]]
+    indices = np.argsort(pred_scores)[::-1]
+    print('john indices', indices)
+    pred_boxes = pred_boxes[indices]
+    pred_class_ids = pred_class_ids[indices]
+    pred_scores = pred_scores[indices]
+    
+    TP_list = np.zeros(class_num)
+    FP_list = np.zeros(class_num)
+    FN_list = np.zeros(class_num)
+
+    # Compute IoU overlaps [pred_boxes, gt_boxes]
+    overlaps = compute_overlaps(pred_boxes, gt_boxes)
+
+    # Loop through ground truth boxes and find matching predictions
+    match_count = 0
+    pred_match = np.zeros([pred_boxes.shape[0]])
+    gt_match = np.zeros([gt_boxes.shape[0]])
+
+    for i in range(len(pred_boxes)):
+        # Find best matching ground truth box
+        sorted_ixs = np.argsort(overlaps[i])[::-1]
+        match_flag = False
+        for j in sorted_ixs:
+            # If ground truth box is already matched, go to next one
+            if gt_match[j] == 1:
+                continue
+            # If we reach IoU smaller than the threshold, end the loop
+            iou = overlaps[i, j]
+            if iou < iou_threshold:
+                break
+            # Do we have a match?
+            if pred_class_ids[i] == gt_class_ids[j]:
+                match_count += 1
+                gt_match[j] = 1
+                pred_match[i] = 1
+                TP_list[pred_class_ids[i]] += 1
+                match_flag = True
+                break
+        
+        # match flag = False, FP count + 1
+        if match_flag != True:
+            FP_list[pred_class_ids[i]] += 1
+    
+    # Calculate FN
+    tmp_pred_class_ids = []
+    for i in pred_class_ids:
+        tmp_pred_class_ids.append(i)
+
+    if len(gt_class_ids) > len(pred_class_ids):
+        print("pred_class_ids is less than gt_class_ids")
+        #print("gt_class_ids", gt_class_ids)
+        #print("pred_class_ids", pred_class_ids)
+
+        for i in gt_class_ids:
+            if i in pred_class_ids:
+                if i in tmp_pred_class_ids:
+                    tmp_pred_class_ids.remove(i)
+                continue
+            else:
+                FN_list[i] += 1
+    
+    return TP_list, FP_list, FN_list
+ 
+
+    """
+    for i in range(len(pred_boxes)):
+        # Find best matching ground truth box
+        sorted_ixs = np.argsort(overlaps[i])[::-1]
+        for j in sorted_ixs:
+            # If ground truth box is already matched, go to next one
+            if gt_match[j] == 1:
+                continue
+            # If we reach IoU smaller than the threshold, end the loop
+            iou = overlaps[i, j]
+            if iou < iou_threshold:
+                break
+            # Do we have a match?
+            if pred_class_ids[i] == gt_class_ids[j]:
+                TP_list[gt_class_ids[j]]
+                match_count += 1
+                gt_match[j] = 1
+                pred_match[i] = 1
+                break
+
+    # Compute precision and recall at each prediction box step
+    precisions = np.cumsum(pred_match) / (np.arange(len(pred_match)) + 1)
+    recalls = np.cumsum(pred_match).astype(np.float32) / len(gt_match)
+
+    # Pad with start and end values to simplify the math
+    precisions = np.concatenate([[0], precisions, [0]])
+    recalls = np.concatenate([[0], recalls, [1]])
+
+    # Ensure precision values decrease but don't increase. This way, the
+    # precision value at each recall threshold is the maximum it can be
+    # for all following recall thresholds, as specified by the VOC paper.
+    for i in range(len(precisions) - 2, -1, -1):
+        precisions[i] = np.maximum(precisions[i], precisions[i + 1])
+
+    # Compute mean AP over recall range
+    indices = np.where(recalls[:-1] != recalls[1:])[0] + 1
+    mAP = np.sum((recalls[indices] - recalls[indices - 1]) *
+                 precisions[indices])
+
+    return mAP, precisions, recalls, overlaps
+    """
+
+
+
 def compute_ap(gt_boxes, gt_class_ids,
                pred_boxes, pred_class_ids, pred_scores,
                iou_threshold=0.5):
@@ -593,6 +715,7 @@ def compute_ap(gt_boxes, gt_class_ids,
     match_count = 0
     pred_match = np.zeros([pred_boxes.shape[0]])
     gt_match = np.zeros([gt_boxes.shape[0]])
+
     for i in range(len(pred_boxes)):
         # Find best matching ground truth box
         sorted_ixs = np.argsort(overlaps[i])[::-1]
@@ -631,6 +754,8 @@ def compute_ap(gt_boxes, gt_class_ids,
                  precisions[indices])
 
     return mAP, precisions, recalls, overlaps
+
+
 
 
 def compute_recall(pred_boxes, gt_boxes, iou):
