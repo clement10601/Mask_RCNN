@@ -713,6 +713,7 @@ def compute_ap(gt_boxes, gt_class_ids,
 
     # Loop through ground truth boxes and find matching predictions
     match_count = 0
+    # the length is the number of predict boundingbox
     pred_match = np.zeros([pred_boxes.shape[0]])
     gt_match = np.zeros([gt_boxes.shape[0]])
 
@@ -731,6 +732,7 @@ def compute_ap(gt_boxes, gt_class_ids,
             if pred_class_ids[i] == gt_class_ids[j]:
                 match_count += 1
                 gt_match[j] = 1
+                # the i-th boundingbox match
                 pred_match[i] = 1
                 break
 
