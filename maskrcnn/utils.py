@@ -567,7 +567,7 @@ def trim_zeros(x):
 
 def compute_class_PR(gt_boxes, gt_class_ids,
                pred_boxes, pred_class_ids, pred_scores,
-               class_num, iou_threshold=0.5):
+               class_num, iou_threshold=0.5, score_threshold=0.9):
     """Compute Precision and Recall of each class, threshold (default 0.5).
 
     Returns:
@@ -576,15 +576,23 @@ def compute_class_PR(gt_boxes, gt_class_ids,
     recalls: List of recall values at different class score thresholds.
     overlaps: [pred_boxes, gt_boxes] IoU overlaps.
     """
-
     pred_boxes = trim_zeros(pred_boxes)
     pred_scores = pred_scores[:pred_boxes.shape[0]]
-    indices = np.argsort(pred_scores)[::-1]
-    print('john indices', indices)
+    indices_raw = np.argsort(pred_scores)[::-1]
+    
+    # get score > score_threshold data
+    indices = []
+
+    for i in indices_raw:
+        if pred_scores[i] >= score_threshold:
+            indices.append(i)
+
     pred_boxes = pred_boxes[indices]
     pred_class_ids = pred_class_ids[indices]
     pred_scores = pred_scores[indices]
     
+    print("predicted scores =>", pred_scores)
+
     TP_list = np.zeros(class_num)
     FP_list = np.zeros(class_num)
     FN_list = np.zeros(class_num)
@@ -592,11 +600,14 @@ def compute_class_PR(gt_boxes, gt_class_ids,
     # Compute IoU overlaps [pred_boxes, gt_boxes]
     overlaps = compute_overlaps(pred_boxes, gt_boxes)
 
-    # Loop through ground truth boxes and find matching predictions
+    # Loop through ground truth boxes and find matched predictions
     match_count = 0
     pred_match = np.zeros([pred_boxes.shape[0]])
     gt_match = np.zeros([gt_boxes.shape[0]])
 
+    # for calculate precision of detection
+    detect_match = 0
+    
     for i in range(len(pred_boxes)):
         # Find best matching ground truth box
         sorted_ixs = np.argsort(overlaps[i])[::-1]
@@ -609,17 +620,24 @@ def compute_class_PR(gt_boxes, gt_class_ids,
             iou = overlaps[i, j]
             if iou < iou_threshold:
                 break
+            
+            # bounding box match
+            detect_match += 1
+
             # Do we have a match?
             if pred_class_ids[i] == gt_class_ids[j]:
                 match_count += 1
                 gt_match[j] = 1
                 pred_match[i] = 1
+
+                # TP count + 1
                 TP_list[pred_class_ids[i]] += 1
                 match_flag = True
                 break
         
         # match flag = False, FP count + 1
         if match_flag != True:
+            # FP count + 1 
             FP_list[pred_class_ids[i]] += 1
     
     # Calculate FN
@@ -627,20 +645,16 @@ def compute_class_PR(gt_boxes, gt_class_ids,
     for i in pred_class_ids:
         tmp_pred_class_ids.append(i)
 
-    if len(gt_class_ids) > len(pred_class_ids):
-        print("pred_class_ids is less than gt_class_ids")
-        #print("gt_class_ids", gt_class_ids)
-        #print("pred_class_ids", pred_class_ids)
 
-        for i in gt_class_ids:
-            if i in pred_class_ids:
-                if i in tmp_pred_class_ids:
-                    tmp_pred_class_ids.remove(i)
-                continue
-            else:
-                FN_list[i] += 1
-    
-    return TP_list, FP_list, FN_list
+    for i in gt_class_ids:
+        if i in pred_class_ids:
+            if i in tmp_pred_class_ids:
+                tmp_pred_class_ids.remove(i)
+            continue
+        else:
+            FN_list[i] += 1
+   
+    return TP_list, FP_list, FN_list, detect_match
  
 
     """

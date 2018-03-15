@@ -1,5 +1,6 @@
 import os
 import sys
+import csv
 import numpy as np
 import time
 
@@ -47,9 +48,9 @@ MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 COCO_MODEL_DIR = os.path.join(ROOT_DIR, "weights")
 if not os.path.exists(COCO_MODEL_DIR):
         os.makedirs(COCO_MODEL_DIR)
-#COCO_MODEL_PATH = os.path.join(ROOT_DIR, "weights/mask_rcnn_coco.h5")
+COCO_MODEL_PATH = os.path.join(ROOT_DIR, "weights/mask_rcnn_coco.h5")
 
-COCO_MODEL_PATH = os.path.join(ROOT_DIR, "weights/mask_rcnn_coco_0159.h5")
+#COCO_MODEL_PATH = os.path.join(ROOT_DIR, "weights/mask_rcnn_coco_0159.h5")
 
 # Download COCO trained weights from Releases if needed
 if not os.path.exists(COCO_MODEL_PATH):
@@ -117,7 +118,14 @@ FN_total = np.zeros(dataset.num_classes)
 
 AP_total = []
 
+# used to calculate precision of detection
+Detection_True_cnt = 0
+Detection_total_cnt = 0
+
 start_time = time.time()
+
+#image_ids = np.random.choice(dataset.image_ids, 4)
+#for image_id in image_ids:
 
 for image_id in dataset.image_ids:
     print('----------------------------------')
@@ -134,9 +142,8 @@ for image_id in dataset.image_ids:
     results = model.detect([image], verbose=0)
     ax = get_ax(1)
     r = results[0]
-    
+
     # Calculate each object accuracy
-    
     AP, precisions, recalls, overlaps = utils.compute_ap(gt_bbox, gt_class_id, 
                                           r['rois'], r['class_ids'], r['scores'])
     print("AP =====> ", AP)
@@ -145,7 +152,7 @@ for image_id in dataset.image_ids:
     AP_total.append(AP)
 
     
-    TP, FP, FN = utils.compute_class_PR(gt_bbox, gt_class_id,
+    TP, FP, FN , Detect_true_cnt = utils.compute_class_PR(gt_bbox, gt_class_id,
                                         r['rois'], r['class_ids'], r['scores'],
                                         dataset.num_classes, 0.51)
 
@@ -158,6 +165,12 @@ for image_id in dataset.image_ids:
     FP_total = np.add(FP_total, FP)
     FN_total = np.add(FN_total, FN)
 
+    Detection_True_cnt += Detect_true_cnt
+    Detection_total_cnt += len(gt_bbox)
+
+# Calculate detection precision
+Detection_Precision = (float(Detection_True_cnt) / Detection_total_cnt)
+
 # Calculate mean Precision and Recall of each class
 print("TP_total=>", TP_total)
 print("FP_total=>", FP_total)
@@ -167,13 +180,26 @@ TP_add_FP = np.add(TP_total, FP_total)
 TP_add_FN = np.add(TP_total, FN_total)
 
 Precision_AVG = np.divide(TP_total, TP_add_FP, out=np.zeros_like(TP_total), where=TP_add_FP!=0)
-print("Average Precision =>", Precision_AVG)
+print("Precision of each classes =>", Precision_AVG)
 
 Recall_AVG = np.divide(TP_total, TP_add_FN, out=np.zeros_like(TP_total), where=TP_add_FN!=0)
-print("Average Recall =>", Recall_AVG)
+print("Recall of each classes =>", Recall_AVG)
 
+print("Mean of each class mAP = >", np.mean(AP_total))
 
-print("Mean Average Precision of classes = >", np.mean(AP_total))
+print("Detection Precision =>", Detection_Precision)
+
+with open('0315_valid_result.csv', 'w') as f:
+    cursor = csv.writer(f)
+    csv_header = ['class name', 'precision', 'recall']
+    cursor.writerow(csv_header)
+
+    for idx, info in enumerate(dataset.class_info):
+        row_info = [info['name'], Precision_AVG[idx], Recall_AVG[idx]]
+        cursor.writerow(row_info)
+    
+    cursor.writerow(['Detection_Precision', Detection_Precision, 'mean_of_class_mAP', np.mean(AP_total)])
+
 
 end_time = time.time()
 print("Cost time =>", (end_time - start_time), "s")
