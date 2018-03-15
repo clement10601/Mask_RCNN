@@ -20,7 +20,7 @@ import matplotlib.patches as patches
 import matplotlib.lines as lines
 from matplotlib.patches import Polygon
 import IPython.display
-
+import cv2
 from maskrcnn import utils
 
 
@@ -75,6 +75,12 @@ def apply_mask(image, mask, color, alpha=0.5):
                                   image[:, :, c])
     return image
 
+
+def apply_bbox(image, bbox, color, alpha=0.5):
+    """Apply the given bbox to the image.
+    """
+    img = cv2.rectangle(image, (bbox[0],bbox[1]), (bbox[2],bboxp[3]), color, 2)
+    return 
 
 def display_instances(image, boxes, masks, class_ids, class_names,
                       scores=None, title="",
@@ -229,6 +235,52 @@ def save_instances(fname, image, boxes, masks, class_ids, class_names,
     plt.cla()
     plt.clf()
     plt.close(fig)
+
+def return_instances(image, boxes, masks, class_ids, class_names,
+                      scores=None, title="", score_throttle='0.95',
+                      figsize=(16, 16), ax=None, output_dir='./output_dir'):
+    """
+    boxes: [num_instance, (y1, x1, y2, x2, class_id)] in image coordinates.
+    masks: [height, width, num_instances]
+    class_ids: [num_instances]
+    class_names: list of class names of the dataset
+    scores: (optional) confidence scores for each box
+    figsize: (optional) the size of the image.
+    """
+    # Number of instances
+    N = boxes.shape[0]
+    if not N:
+        print("\n*** No instances to display *** \n")
+    else:
+        assert boxes.shape[0] == masks.shape[-1] == class_ids.shape[0]
+    # Generate random colors
+    colors = random_colors(N)
+    # Show area outside image boundaries.
+    height, width = image.shape[:2]
+
+    masked_image = image.astype(np.uint32).copy()
+    for i in range(N):
+        color = colors[i]
+        score = scores[i] if scores is not None else None
+        if float(score) < float(score_throttle):
+            continue
+        # Bounding box
+        if not np.any(boxes[i]):
+            # Skip this instance. Has no bbox. Likely lost in image cropping.
+            continue
+        y1, x1, y2, x2 = boxes[i]
+        masked_image = apply_bbox(masked_image, (x1,y1,x2,y2), color)
+
+        # Label
+        class_id = class_ids[i]
+        label = class_names[class_id]
+        x = random.randint(x1, (x1 + x2) // 2)
+        caption = "{} {:.3f}".format(label, score) if score else label
+
+        # Mask
+        mask = masks[:, :, i]
+        masked_image = apply_mask(masked_image, mask, color)
+    return masked_image.astype(np.uint8)
 
 def extract_instances(boxes, masks, class_ids, class_names,
                       scores=None, title="", score_throttle='0.95'):
