@@ -12,3 +12,6 @@ maskrcnn/
 
 *.pyc
 *.random
+=======
+.idea/
+
