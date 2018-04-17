@@ -104,6 +104,7 @@ class mlWorker(Process):
                 redisDB.ltrim(config.IMAGE_QUEUE, len(query), -1)
                 self.lock.release()
                 imageIDs = []
+                thresholds = {}
                 batch = []
                 # loop over the queue
                 # deserialize the object and obtain the input image
@@ -115,6 +116,7 @@ class mlWorker(Process):
                         batch.append(image)
                         # update the list of image IDs
                         imageIDs.append(data["id"])
+                        thresholds[data["id"]] = data["threshold"]
 
                 # check to see if we need to process the batch
                 if len(imageIDs) > 0:
@@ -135,7 +137,7 @@ class mlWorker(Process):
                         output = []
                         output = self.extract_result(resultSet['rois'], resultSet['masks'],
                             resultSet['class_ids'], class_names, resultSet['scores'],
-                            throttle=config.THROTTLE)
+                            throttle=float(thresholds[imageID]))
                         redisDB.set(imageID, json.dumps(output))
                 # sleep for a small amount
                 time.sleep(config.SERVER_SLEEP*2)
