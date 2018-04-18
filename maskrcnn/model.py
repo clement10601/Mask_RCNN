@@ -1975,6 +1975,8 @@ class MaskRCNN():
 
         # Add multi-GPU support.
         if config.GPU_COUNT > 1:
+            sys.path.append('/home/john/object_detect/Mask_RCNN/maskrcnn')
+            print('sys.path', sys.path)
             from parallel_model import ParallelModel
             model = ParallelModel(model, config.GPU_COUNT)
 
