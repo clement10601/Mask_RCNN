@@ -16,12 +16,16 @@ from maskrcnn import model as modellib
 from maskrcnn import visualize
 import colorsys
 import random
+import glob
 
 ###
 ### Para Setup
 ###
 vid_file = 'test.mp4'
-vid_out = 'test_out.mp4'
+#vid_out = 'test_out.mp4'
+in_dir = './test_video'
+out_dir = './test_output_video'
+
 # Root directory of the project
 ROOT_DIR = os.getcwd()
 # Directory to save logs and trained model
@@ -85,31 +89,44 @@ model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR, config=config)
 
 # Load weights trained on MS-COCO
 model.load_weights(COCO_MODEL_PATH, by_name=True)
-
-#file_names = next(os.walk(IMAGE_DIR))[2]
-file_name = vid_file
+	
 start_t = timeit.default_timer()
 
-video_reader = cv2.VideoCapture(file_name)
-fps = video_reader.get(cv2.CAP_PROP_FPS)
-nb_frames = int(video_reader.get(cv2.CAP_PROP_FRAME_COUNT))
-frame_h = int(video_reader.get(cv2.CAP_PROP_FRAME_HEIGHT))
-frame_w = int(video_reader.get(cv2.CAP_PROP_FRAME_WIDTH))
+# load each video name
+for roots, dirs, files in os.walk(in_dir, topdown=False):
+    for vid_file in files:
 
-video_writer = cv2.VideoWriter(vid_out,
-                               cv2.VideoWriter_fourcc(*'MP4V'), 
-                               fps, 
-                               (frame_w, frame_h))
-print("Processing {0} frames, FPS: {1}".format(nb_frames, fps))
-colors = random_colors(100)
-for i in tqdm(range(nb_frames)):
-    ret, image = video_reader.read()
-    results = model.detect([image], verbose=0)
-    r = results[0]
-    image = visualize.return_instances(image, r['rois'], r['masks'], r['class_ids'],
-                            class_names, r['scores'], score_throttle='0.95', colors=colors)
-    video_writer.write(np.uint8(image))
-video_reader.release()
-video_writer.release()
+        #file_names = next(os.walk(IMAGE_DIR))[2]
+        
+        #file_name = vid_file
+        file_name = os.path.join(roots, vid_file)
+        print('Processing file:{}'.format(file_name))
+        
+        video_reader = cv2.VideoCapture(file_name)
+        fps = video_reader.get(cv2.CAP_PROP_FPS)
+        nb_frames = int(video_reader.get(cv2.CAP_PROP_FRAME_COUNT))
+        frame_h = int(video_reader.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        frame_w = int(video_reader.get(cv2.CAP_PROP_FRAME_WIDTH))
+        
+        out_file_name = vid_file.split('.mp4')[0] + '_0.8_out.mp4'
+        vid_out = os.path.join(out_dir, out_file_name)
+        print(vid_out)
+        
+        video_writer = cv2.VideoWriter(vid_out,
+                                       cv2.VideoWriter_fourcc(*'MP4V'), 
+                                       fps, 
+                                       (frame_w, frame_h))
+        print("Processing {0} frames, FPS: {1}".format(nb_frames, fps))
+        colors = random_colors(100)
+        for i in tqdm(range(nb_frames)):
+            ret, image = video_reader.read()
+            results = model.detect([image], verbose=0)
+            r = results[0]
+            image = visualize.return_instances(image, r['rois'], r['masks'], r['class_ids'],
+                                    class_names, r['scores'], score_throttle='0.8', colors=colors)
+            video_writer.write(np.uint8(image))
+        video_reader.release()
+        video_writer.release()
+        
 stop_t = timeit.default_timer()
 print("Exec Time: {}".format(stop_t - start_t))
