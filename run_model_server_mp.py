@@ -17,10 +17,9 @@ from skimage.measure import find_contours
 
 
 # connect to Redis server
-redisDB = redis.StrictRedis(host=config.REDIS_HOST,
+rdp = redis.ConnectionPool(ost=config.REDIS_HOST,
                           port=config.REDIS_PORT,
                           db=config.REDIS_DB,
-                          socket_timeout=1,
                           socket_keepalive=True)
 
 # Root directory of the project
@@ -94,11 +93,7 @@ class mlWorker(Process):
             # attempt to grab a batch of images from the database, then
             # initialize the image IDs and batch of images themselves
             try:
-                redisDB = redis.StrictRedis(host=config.REDIS_HOST,
-                          port=config.REDIS_PORT,
-                          db=config.REDIS_DB,
-                          socket_timeout=1,
-                          socket_keepalive=True)
+                redisDB = redis.StrictRedis(connection_pool=rdp)
                 self.lock.acquire()
                 query = redisDB.lrange(config.IMAGE_QUEUE, 0, config.BATCH_SIZE - 1)
                 redisDB.ltrim(config.IMAGE_QUEUE, len(query), -1)
