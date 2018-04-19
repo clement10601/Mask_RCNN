@@ -93,7 +93,6 @@ class mlWorker(Process):
             # attempt to grab a batch of images from the database, then
             # initialize the image IDs and batch of images themselves
             try:
-                redisDB = redis.StrictRedis(connection_pool=rdp)
                 self.lock.acquire()
                 query = redisDB.lrange(config.IMAGE_QUEUE, 0, config.BATCH_SIZE - 1)
                 redisDB.ltrim(config.IMAGE_QUEUE, len(query), -1)
