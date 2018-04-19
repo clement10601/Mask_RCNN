@@ -3,10 +3,11 @@ import sys
 import csv
 import numpy as np
 import time
+import argparse
 
-sys.path.append('/home/john/Mask_RCNN/')
-sys.path.append('/home/john/Mask_RCNN/maskrcnn/')
-sys.path.append('/home/john/Mask_RCNN/cocoapi/PythonAPI/')
+sys.path.append('/home/john/object_detect/Mask_RCNN/')
+sys.path.append('/home/john/object_detect/Mask_RCNN/maskrcnn/')
+sys.path.append('/home/john/object_detect/Mask_RCNN/cocoapi/PythonAPI/')
 
 import matplotlib
 matplotlib.use('Agg')
@@ -34,12 +35,33 @@ class InferenceConfig(coco.CocoConfig):
 
 config = InferenceConfig()
 
+# parse args
+parser = argparse.ArgumentParser(
+        description="eval coco object detection performance")
+
+parser.add_argument("--model_name", required=False,
+        default="mask_rcnn_coco.h5",
+        help="coco model name")
+
+parser.add_argument("--result_name", required=True,
+        default="coco_valid_result.csv",
+        help="valid result file name")
+
+parser.add_argument("--score_threshold", required=False,
+	default=0.95,
+	help="score threshold")
+
+
+args = parser.parse_args()
+
+SCORE_THRESHOLD = args.score_threshold
+
 # define path of coco dataset
-COCO_DIR = "/data1/coco/2017"
+COCO_DIR = "/workspace/coco/2017"
 
 ### Setup Model
 # Root directory of the project
-ROOT_DIR = "/home/john/Mask_RCNN"
+ROOT_DIR = "/home/john/object_detect/Mask_RCNN"
 
 # Directory to save logs and trained model
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
@@ -48,7 +70,9 @@ MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 COCO_MODEL_DIR = os.path.join(ROOT_DIR, "weights")
 if not os.path.exists(COCO_MODEL_DIR):
         os.makedirs(COCO_MODEL_DIR)
-COCO_MODEL_PATH = os.path.join(ROOT_DIR, "weights/mask_rcnn_coco.h5")
+COCO_FILE = os.path.join("weights/", args.model_name)
+COCO_MODEL_PATH = os.path.join(ROOT_DIR, COCO_FILE)
+print(COCO_MODEL_PATH)
 
 #COCO_MODEL_PATH = os.path.join(ROOT_DIR, "weights/mask_rcnn_coco_0159.h5")
 
@@ -154,7 +178,7 @@ for image_id in dataset.image_ids:
     
     TP, FP, FN , Detect_true_cnt = utils.compute_class_PR(gt_bbox, gt_class_id,
                                         r['rois'], r['class_ids'], r['scores'],
-                                        dataset.num_classes, 0.51)
+                                        dataset.num_classes, 0.51, 0.95)
 
     #print("gt_class_id", gt_class_id)
     #print("pred_class_id", r['class_ids'])
@@ -189,7 +213,7 @@ print("Mean of each class mAP = >", np.mean(AP_total))
 
 print("Detection Precision =>", Detection_Precision)
 
-with open('0315_valid_result.csv', 'w') as f:
+with open(args.result_name, 'w') as f:
     cursor = csv.writer(f)
     csv_header = ['class name', 'precision', 'recall']
     cursor.writerow(csv_header)
