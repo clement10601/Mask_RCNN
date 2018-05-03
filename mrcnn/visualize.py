@@ -150,6 +150,7 @@ def display_instances(image, boxes, masks, class_ids, class_names,
                                 alpha=0.7, linestyle="dashed",
                                 edgecolor=color, facecolor='none')
             ax.add_patch(p)
+<<<<<<< HEAD:mrcnn/visualize.py
 
         # Label
         if not captions:
@@ -238,12 +239,25 @@ def save_instances(fname, image, boxes, masks, class_ids, class_names,
         label = class_names[class_id]
         x = random.randint(x1, (x1 + x2) // 2)
         caption = "{} {:.3f}".format(label, score) if score else label
+=======
+
+        # Label
+        if not captions:
+            class_id = class_ids[i]
+            score = scores[i] if scores is not None else None
+            label = class_names[class_id]
+            x = random.randint(x1, (x1 + x2) // 2)
+            caption = "{} {:.3f}".format(label, score) if score else label
+        else:
+            caption = captions[i]
+>>>>>>> 6c9c82f5feaf5d729a72c67f33e139c4bc71399b:mrcnn/visualize.py
         ax.text(x1, y1 + 8, caption,
                 color='w', size=11, backgroundcolor="none")
 
         # Mask
         mask = masks[:, :, i]
-        masked_image = apply_mask(masked_image, mask, color)
+        if show_mask:
+            masked_image = apply_mask(masked_image, mask, color)
 
         # Mask Polygon
         # Pad to ensure proper polygons for masks that touch image edges.
@@ -257,6 +271,7 @@ def save_instances(fname, image, boxes, masks, class_ids, class_names,
             p = Polygon(verts, facecolor="none", edgecolor=color)
             ax.add_patch(p)
     ax.imshow(masked_image.astype(np.uint8))
+<<<<<<< HEAD:mrcnn/visualize.py
     directory = output_dir
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -336,6 +351,12 @@ def extract_instances(boxes, masks, class_ids, class_names,
         output.append(label)
     return output
     
+=======
+    if auto_show:
+        plt.show()
+
+
+>>>>>>> 6c9c82f5feaf5d729a72c67f33e139c4bc71399b:mrcnn/visualize.py
 def display_differences(image,
                         gt_box, gt_class_id, gt_mask,
                         pred_box, pred_class_id, pred_score, pred_mask,

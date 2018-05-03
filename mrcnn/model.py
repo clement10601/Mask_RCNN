@@ -1082,6 +1082,9 @@ def mrcnn_class_loss_graph(target_class_ids, pred_class_logits,
         classes that are in the dataset of the image, and 0
         for classes that are not in the dataset.
     """
+    # During model building, Keras calls this function with
+    # target_class_ids of type float32. Unclear why. Cast it
+    # to int to get around it.
     target_class_ids = tf.cast(target_class_ids, 'int64')
 
     # Find predictions of classes that are not in the dataset.
@@ -2035,8 +2038,11 @@ class MaskRCNN():
 
         # Add multi-GPU support.
         if config.GPU_COUNT > 1:
+<<<<<<< HEAD:mrcnn/model.py
             sys.path.append('/home/john/object_detect/Mask_RCNN/maskrcnn')
             print('sys.path', sys.path)
+=======
+>>>>>>> 6c9c82f5feaf5d729a72c67f33e139c4bc71399b:mrcnn/model.py
             from mrcnn.parallel_model import ParallelModel
             model = ParallelModel(model, config.GPU_COUNT)
 
@@ -2139,7 +2145,11 @@ class MaskRCNN():
             if layer.output in self.keras_model.losses:
                 continue
             loss = (
+<<<<<<< HEAD:mrcnn/model.py
                 tf.reduce_mean(layer.output, keep_dims=True)
+=======
+                tf.reduce_mean(layer.output, keepdims=True)
+>>>>>>> 6c9c82f5feaf5d729a72c67f33e139c4bc71399b:mrcnn/model.py
                 * self.config.LOSS_WEIGHTS.get(name, 1.))
             self.keras_model.add_loss(loss)
 
@@ -2163,7 +2173,11 @@ class MaskRCNN():
             layer = self.keras_model.get_layer(name)
             self.keras_model.metrics_names.append(name)
             loss = (
+<<<<<<< HEAD:mrcnn/model.py
                 tf.reduce_mean(layer.output, keep_dims=True)
+=======
+                tf.reduce_mean(layer.output, keepdims=True)
+>>>>>>> 6c9c82f5feaf5d729a72c67f33e139c4bc71399b:mrcnn/model.py
                 * self.config.LOSS_WEIGHTS.get(name, 1.))
             self.keras_model.metrics_tensors.append(loss)
 
