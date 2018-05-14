@@ -52,8 +52,8 @@ ROOT_DIR = os.path.abspath("../../")
 
 # Import Mask RCNN
 sys.path.append(ROOT_DIR)  # To find local version of the library
-from mrcnn.config import Config
-from mrcnn import model_nomask as modellib, utils
+from mrcnnnm.config import Config
+from mrcnnnm import model as modellib, utils
 
 # Path to trained weights file
 COCO_MODEL_PATH = os.path.join(ROOT_DIR, "mask_rcnn_coco.h5")
@@ -74,11 +74,11 @@ class CocoConfig(Config):
     to the COCO dataset.
     """
     # Give the configuration a recognizable name
-    NAME = "coco"
+    NAME = "coconm"
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
-    IMAGES_PER_GPU = 2
+    IMAGES_PER_GPU = 1
 
     # Uncomment to train on 8 GPUs (default is 1)
     # GPU_COUNT = 8
@@ -217,57 +217,57 @@ class CocoDataset(utils.Dataset):
             print("... done unzipping")
         print("Will use annotations in " + annFile)
 
-    def load_mask(self, image_id):
-        """Load instance masks for the given image.
+    #def load_mask(self, image_id):
+    #    """Load instance masks for the given image.
 
-        Different datasets use different ways to store masks. This
-        function converts the different mask format to one format
-        in the form of a bitmap [height, width, instances].
+    #    Different datasets use different ways to store masks. This
+    #    function converts the different mask format to one format
+    #    in the form of a bitmap [height, width, instances].
 
-        Returns:
-        masks: A bool array of shape [height, width, instance count] with
-            one mask per instance.
-        class_ids: a 1D array of class IDs of the instance masks.
-        """
-        # If not a COCO image, delegate to parent class.
-        image_info = self.image_info[image_id]
-        if image_info["source"] != "coco":
-            return super(CocoDataset, self).load_mask(image_id)
+    #    Returns:
+    #    masks: A bool array of shape [height, width, instance count] with
+    #        one mask per instance.
+    #    class_ids: a 1D array of class IDs of the instance masks.
+    #    """
+    #    # If not a COCO image, delegate to parent class.
+    #    image_info = self.image_info[image_id]
+    #    if image_info["source"] != "coco":
+    #        return super(CocoDataset, self).load_mask(image_id)
 
-        instance_masks = []
-        class_ids = []
-        annotations = self.image_info[image_id]["annotations"]
-        # Build mask of shape [height, width, instance_count] and list
-        # of class IDs that correspond to each channel of the mask.
-        for annotation in annotations:
-            class_id = self.map_source_class_id(
-                "coco.{}".format(annotation['category_id']))
-            if class_id:
-                m = self.annToMask(annotation, image_info["height"],
-                                   image_info["width"])
-                # Some objects are so small that they're less than 1 pixel area
-                # and end up rounded out. Skip those objects.
-                if m.max() < 1:
-                    continue
-                # Is it a crowd? If so, use a negative class ID.
-                if annotation['iscrowd']:
-                    # Use negative class ID for crowds
-                    class_id *= -1
-                    # For crowd masks, annToMask() sometimes returns a mask
-                    # smaller than the given dimensions. If so, resize it.
-                    if m.shape[0] != image_info["height"] or m.shape[1] != image_info["width"]:
-                        m = np.ones([image_info["height"], image_info["width"]], dtype=bool)
-                instance_masks.append(m)
-                class_ids.append(class_id)
+    #    instance_masks = []
+    #    class_ids = []
+    #    annotations = self.image_info[image_id]["annotations"]
+    #    # Build mask of shape [height, width, instance_count] and list
+    #    # of class IDs that correspond to each channel of the mask.
+    #    for annotation in annotations:
+    #        class_id = self.map_source_class_id(
+    #            "coco.{}".format(annotation['category_id']))
+    #        if class_id:
+    #            m = self.annToMask(annotation, image_info["height"],
+    #                               image_info["width"])
+    #            # Some objects are so small that they're less than 1 pixel area
+    #            # and end up rounded out. Skip those objects.
+    #            if m.max() < 1:
+    #                continue
+    #            # Is it a crowd? If so, use a negative class ID.
+    #            if annotation['iscrowd']:
+    #                # Use negative class ID for crowds
+    #                class_id *= -1
+    #                # For crowd masks, annToMask() sometimes returns a mask
+    #                # smaller than the given dimensions. If so, resize it.
+    #                if m.shape[0] != image_info["height"] or m.shape[1] != image_info["width"]:
+    #                    m = np.ones([image_info["height"], image_info["width"]], dtype=bool)
+    #            instance_masks.append(m)
+    #            class_ids.append(class_id)
 
-        # Pack instance masks into an array
-        if class_ids:
-            mask = np.stack(instance_masks, axis=2).astype(np.bool)
-            class_ids = np.array(class_ids, dtype=np.int32)
-            return mask, class_ids
-        else:
-            # Call super class to return an empty mask
-            return super(CocoDataset, self).load_mask(image_id)
+    #    # Pack instance masks into an array
+    #    if class_ids:
+    #        mask = np.stack(instance_masks, axis=2).astype(np.bool)
+    #        class_ids = np.array(class_ids, dtype=np.int32)
+    #        return mask, class_ids
+    #    else:
+    #        # Call super class to return an empty mask
+    #        return super(CocoDataset, self).load_mask(image_id)
 
     def image_reference(self, image_id):
         """Return a link to the image in the COCO Website."""
@@ -312,7 +312,7 @@ class CocoDataset(utils.Dataset):
 #  COCO Evaluation
 ############################################################
 
-def build_coco_results(dataset, image_ids, rois, class_ids, scores, masks):
+def build_coco_results(dataset, image_ids, rois, class_ids, scores):
     """Arrange resutls to match COCO specs in http://cocodataset.org/#format
     """
     # If no results, return an empty list
@@ -326,14 +326,20 @@ def build_coco_results(dataset, image_ids, rois, class_ids, scores, masks):
             class_id = class_ids[i]
             score = scores[i]
             bbox = np.around(rois[i], 1)
-            mask = masks[:, :, i]
+            #mask = masks[:, :, i]
 
+            #result = {
+            #    "image_id": image_id,
+            #    "category_id": dataset.get_source_class_id(class_id, "coco"),
+            #    "bbox": [bbox[1], bbox[0], bbox[3] - bbox[1], bbox[2] - bbox[0]],
+            #    "score": score,
+            #    "segmentation": maskUtils.encode(np.asfortranarray(mask))
+            #}
             result = {
                 "image_id": image_id,
                 "category_id": dataset.get_source_class_id(class_id, "coco"),
                 "bbox": [bbox[1], bbox[0], bbox[3] - bbox[1], bbox[2] - bbox[0]],
-                "score": score,
-                "segmentation": maskUtils.encode(np.asfortranarray(mask))
+                "score": score
             }
             results.append(result)
     return results
@@ -370,10 +376,13 @@ def evaluate_coco(model, dataset, coco, eval_type="bbox", limit=0, image_ids=Non
 
         # Convert results to COCO format
         # Cast masks to uint8 because COCO tools errors out on bool
+        #image_results = build_coco_results(dataset, coco_image_ids[i:i + 1],
+        #                                   r["rois"], r["class_ids"],
+        #                                   r["scores"],
+        #                                   r["masks"].astype(np.uint8))
         image_results = build_coco_results(dataset, coco_image_ids[i:i + 1],
                                            r["rois"], r["class_ids"],
-                                           r["scores"],
-                                           r["masks"].astype(np.uint8))
+                                           r["scores"])
         results.extend(image_results)
 
     # Load results. This modifies results with additional attributes.
